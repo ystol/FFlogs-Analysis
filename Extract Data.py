@@ -23,30 +23,33 @@ def convtimestamp(UNIXstring):
     return [date, day, timestamp]
 
 
-key = logskey['Key']
-keysyntax = '?api_key=' + key
+keysyntax = '?api_key=' + logskey['Key']
 endpoint = 'https://www.fflogs.com:443/v1/'
 myreports = 'reports/user/Defai'
 getreport = 'report/fights/'
+zonescall = 'zones'
 
-endurl = endpoint + myreports + keysyntax
-print(endurl)
+reports_url = endpoint + myreports + keysyntax
+print(reports_url)
+zones_url = endpoint + zonescall + keysyntax
 
-r = requests.get(endurl).json()
+get_reports_call = requests.get(reports_url).json()
+get_zones_call = requests.get(zones_url).json()
 #print(r)
 # zone 33 is edens verse
 mydata = pd.DataFrame()
 reports = []
-for eachentry in r:
-    eachentry['date'], eachentry['day'], eachentry['start'] = convtimestamp(eachentry['start']/1000)
-    ignore, ignore, eachentry['end'] = convtimestamp(eachentry['end']/1000)
+for eachentry in get_reports_call:
+    eachentry['date'], eachentry['day'], eachentry['start_time'] = convtimestamp(eachentry['start']/1000)
+    ignore, ignore, eachentry['end_time'] = convtimestamp(eachentry['end']/1000)
     reports.append(eachentry)
 
 print(reports)
 keys = list(reports[0].keys())
-test = pd.DataFrame.from_dict(reports)
+allreports = pd.DataFrame.from_dict(reports)
 
-print(test)
+# print(allreports)
+print(get_zones_call)
 
 getid = reports[0]['id']
 # reportgeturl = endpoint + getreport + getid + keysyntax
