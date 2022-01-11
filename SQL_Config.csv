@@ -1,6 +1,4 @@
-Host,host
-User,admin
-Password,markupdb
-Database_Name,markuptracker
-Simplify_Names,0
-Project,GLTP Portals 90%
+Host,localhost
+User,root
+Password,eugene
+Database_Name,statics
