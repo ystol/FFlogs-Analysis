@@ -1,9 +1,12 @@
 import json
 import requests
-import datetime
+from Functions import General_Functions as gFunc
+from Functions import Functions_Configs as configFunc
+from Functions import Functions_SQL_Interfacing as save
 import calendar
 import pandas as pd
 import csv
+import mysql.connector
 
 pd.options.display.width = None
 
@@ -14,18 +17,10 @@ with open(config_file) as config_data:
     reader = csv.reader(config_data)
     logskey = dict(reader)
 
-
-def convtimestamp(UNIXstring):
-    timestamp = datetime.datetime.fromtimestamp(UNIXstring)
-    date = timestamp.strftime('%Y-%m-%d')
-    day = timestamp.strftime('%A')
-    timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
-    return [date, day, timestamp]
-
-
+owner = 'Defai'
 keysyntax = '?api_key=' + logskey['Key']
 endpoint = 'https://www.fflogs.com:443/v1/'
-myreports = 'reports/user/Defai'
+myreports = 'reports/user/' + owner
 getreport = 'report/fights/'
 zonescall = 'zones'
 
@@ -40,18 +35,30 @@ get_zones_call = requests.get(zones_url).json()
 mydata = pd.DataFrame()
 reports = []
 for eachentry in get_reports_call:
-    eachentry['date'], eachentry['day'], eachentry['start_time'] = convtimestamp(eachentry['start']/1000)
-    ignore, ignore, eachentry['end_time'] = convtimestamp(eachentry['end']/1000)
+    eachentry['date'], eachentry['day'], eachentry['start_time'] = gFunc.convtimestamp(eachentry['start']/1000)
+    ignore, ignore, eachentry['end_time'] = gFunc.convtimestamp(eachentry['end']/1000)
     reports.append(eachentry)
 
-print(reports)
+#print(reports)
 keys = list(reports[0].keys())
 allreports = pd.DataFrame.from_dict(reports)
 
-# print(allreports)
-print(get_zones_call)
+print(allreports)
+#print(get_zones_call)
 
-getid = reports[0]['id']
-# reportgeturl = endpoint + getreport + getid + keysyntax
-# r = requests.get(reportgeturl).json()
-# print(r)
+
+with pd.ExcelWriter('testdata.xlsx') as writer:
+    allreports.to_excel(writer, sheet_name='test data')
+
+config, found = configFunc.check_for_config('SQL_Config.csv')
+# get SQL connection working. Add database=config['Database_Name'] if not using localhost
+connection = mysql.connector.connect(host=config['Host'],
+                                     user=config['User'],
+                                     passwd=config['Password'],
+                                     database=config['Database_Name'])
+
+report_columns = list(allreports.columns)
+table = 'reportdata'
+delete_syntax = 'DELETE FROM ' + table + " WHERE owner = '" + owner + "'"
+print(delete_syntax)
+save.save_to_SQL(connection, table, report_columns, allreports, delete_syntax)
