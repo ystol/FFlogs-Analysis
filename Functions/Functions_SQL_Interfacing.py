@@ -42,3 +42,20 @@ def save_to_SQL(connection, table, table_column_names_list, dataframe, delete_sy
     # commit is necessary to save changes, otherwise nothing occurs
     connection.commit()
     return connection, my_cursor
+
+
+def get_from_mySQL(connection, table_column, table_target):
+    mycursor = connection.cursor()
+    prefix = "SELECT "
+    suffix = " FROM " + table_target
+    multi_column = (len(table_column) > 1) and (isinstance(table_column, list))
+    if multi_column:
+        table_column = ','.join(table_column)
+        select_query = prefix + table_column + suffix
+        mycursor.execute(select_query)
+        return mycursor.fetchall()
+    else:
+        select_query = prefix + table_column + suffix
+        mycursor.execute(select_query)
+        return [out[0] for out in mycursor.fetchall()]
+
