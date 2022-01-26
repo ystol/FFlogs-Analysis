@@ -53,9 +53,42 @@ def get_from_mySQL(connection, table_column, table_target):
         table_column = ','.join(table_column)
         select_query = prefix + table_column + suffix
         mycursor.execute(select_query)
-        return mycursor.fetchall()
+        return mycursor.fetchall(), select_query
     else:
         select_query = prefix + table_column + suffix
         mycursor.execute(select_query)
-        return [out[0] for out in mycursor.fetchall()]
+        return [out[0] for out in mycursor.fetchall()], select_query
 
+
+def get_from_MYSQL_to_df(connection, table_target, table_column=[]):
+    prefix = "SELECT "
+    suffix = " FROM " + table_target
+    multi_column = (len(table_column) > 1) and (isinstance(table_column, list))
+    get_table = len(table_column) == 0
+    if multi_column:
+        table_column = ','.join(table_column)
+        select_query = prefix + table_column + suffix
+    elif get_table:
+        select_query = prefix + "*" + suffix
+    else:
+        select_query = prefix + table_column + suffix
+    df = pd.read_sql(select_query, connection)
+    return df
+
+
+def update_MYSQL(connection, table, match_columns: list, match_values: list, update_columns: list, update_values: list):
+    # single entry update
+    my_cursor = connection.cursor()
+    updateprefix = "UPDATE " + table + " SET "
+    set_syntax = []
+    where_syntax = []
+    for i, eachcolumn in enumerate(match_columns):
+        where_syntax.append(eachcolumn + " = '" + str(match_values[i]) + "'")
+    for j, eachupdatecolumn in enumerate(update_columns):
+        set_syntax.append(eachupdatecolumn + " = '" + update_values[j] + "'")
+    set_syntax = ','.join(set_syntax)
+    where_syntax = 'WHERE ' + ' and '.join(where_syntax)
+    sql_syntax = updateprefix + set_syntax + " " + where_syntax + ";"
+    my_cursor.execute(sql_syntax)
+    connection.commit()
+    return sql_syntax

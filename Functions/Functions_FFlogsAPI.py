@@ -15,6 +15,7 @@ def fflogs_getReports(reports_url):
         reports.append(eachentry)
 
     allreports = pd.DataFrame.from_dict(reports)
+    allreports.rename(columns={'id': 'reportid'}, inplace=True)
     return allreports
 
 
@@ -37,7 +38,7 @@ def fflogs_getfightdata(report_list, prefix_url, suffix_url, owner):
             values.insert(0, eachreport)
             values.insert(1, owner)
             sql_headers = ['reportid', 'owner', 'run_num', 'boss', 'bossname', 'zoneID', 'defeated', 'bosspercent',
-                       'fightpercent', 'lastphase']
+                           'fightpercent', 'lastphase']
             fight_data = dict(zip(sql_headers, values))
             fights.append(fight_data)
 
@@ -51,7 +52,7 @@ def fflogs_getcharacters(report_list, prefix_url, suffix_url, owner):
         print(fights_url)
         get_fights_call = requests.get(fights_url).json()
         allfights = get_fights_call['friendlies']
-
+        print(allfights)
         for eachfight in allfights:
             fight_headers = ['name', 'server']
             try:
