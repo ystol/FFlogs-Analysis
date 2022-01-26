@@ -52,7 +52,6 @@ def fflogs_getcharacters(report_list, prefix_url, suffix_url, owner):
         print(fights_url)
         get_fights_call = requests.get(fights_url).json()
         allfights = get_fights_call['friendlies']
-        print(allfights)
         for eachfight in allfights:
             fight_headers = ['name', 'server']
             try:
