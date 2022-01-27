@@ -34,7 +34,7 @@ for index, eachentry in fightsdf.iterrows():
     charactersfound = characterlist[characterlist['charname'].isin(participants)]['static_name']
     staticoccurences = Counter(charactersfound).most_common()
     static = staticoccurences[0]
-    if static[1] > 5 and static[0] != 'N/A':
+    if static[1] >= 5 and static[0] != 'N/A':
         fight_static.append([report, attempt, static[0]])
 for eachentry in fight_static:
     print(sqlf.update_MYSQL(connection, table, ['reportid', 'run_num'], eachentry[:2], ['static'], [eachentry[2]]))

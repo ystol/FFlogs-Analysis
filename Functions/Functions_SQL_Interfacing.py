@@ -83,12 +83,13 @@ def update_MYSQL(connection, table, match_columns: list, match_values: list, upd
     set_syntax = []
     where_syntax = []
     for i, eachcolumn in enumerate(match_columns):
-        where_syntax.append(eachcolumn + " = '" + str(match_values[i]) + "'")
+        where_syntax.append(eachcolumn + ' = "' + str(match_values[i]) + '"')
     for j, eachupdatecolumn in enumerate(update_columns):
-        set_syntax.append(eachupdatecolumn + " = '" + update_values[j] + "'")
+        set_syntax.append(eachupdatecolumn + ' = "' + update_values[j] + '"')
     set_syntax = ','.join(set_syntax)
     where_syntax = 'WHERE ' + ' and '.join(where_syntax)
     sql_syntax = updateprefix + set_syntax + " " + where_syntax + ";"
+    # print(sql_syntax)
     my_cursor.execute(sql_syntax)
     connection.commit()
     return sql_syntax
