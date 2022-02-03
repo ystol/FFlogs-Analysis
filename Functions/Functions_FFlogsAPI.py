@@ -21,14 +21,16 @@ def fflogs_getReports(reports_url):
 
 def fflogs_getfightdata(report_list, prefix_url, suffix_url, owner):
     fights = []
+    report_length = len(report_list)
+    progress = 1
     for eachreport in report_list:
         fights_url = prefix_url + eachreport + suffix_url
-        print(fights_url)
+        print("\r" + "Gathering data: " + str(progress) + "/" + str(report_length) + " from url: " + fights_url, end="")
         get_fights_call = requests.get(fights_url).json()
         allfights = get_fights_call['fights']
 
         for eachfight in allfights:
-            fight_headers = ['id', 'boss', 'name', 'zoneID', 'kill', 'bossPercentage', 'fightPercentage',
+            fight_headers = ['id', 'boss', 'name', 'zoneName', 'kill', 'bossPercentage', 'fightPercentage',
                              'lastPhaseForPercentageDisplay']
             try:
                 values = [eachfight[header] for header in fight_headers]
@@ -39,11 +41,12 @@ def fflogs_getfightdata(report_list, prefix_url, suffix_url, owner):
                 continue
             values.insert(0, eachreport)
             values.insert(1, owner)
-            sql_headers = ['reportid', 'owner', 'run_num', 'boss', 'bossname', 'zoneID', 'defeated', 'bosspercent',
+            sql_headers = ['reportid', 'owner', 'run_num', 'boss', 'bossname', 'zone_name', 'defeated', 'bosspercent',
                            'fightpercent', 'lastphase', 'fight_length_min']
             fight_data = dict(zip(sql_headers, values))
             fights.append(fight_data)
-
+        progress += 1
+    print('\n')
     return pd.DataFrame.from_dict(fights)
 
 
