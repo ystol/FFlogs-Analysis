@@ -32,13 +32,15 @@ def fflogs_getfightdata(report_list, prefix_url, suffix_url, owner):
                              'lastPhaseForPercentageDisplay']
             try:
                 values = [eachfight[header] for header in fight_headers]
+                fight_length = gFunc.TimeDifference(eachfight['start_time'], eachfight['end_time']).minutes_raw
+                values.append(fight_length)
             except KeyError:
                 # ignoring for now, but an extra attempt is being found here
                 continue
             values.insert(0, eachreport)
             values.insert(1, owner)
             sql_headers = ['reportid', 'owner', 'run_num', 'boss', 'bossname', 'zoneID', 'defeated', 'bosspercent',
-                           'fightpercent', 'lastphase']
+                           'fightpercent', 'lastphase', 'fight_length_min']
             fight_data = dict(zip(sql_headers, values))
             fights.append(fight_data)
 
