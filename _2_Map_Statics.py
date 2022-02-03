@@ -28,8 +28,8 @@ def map_statics(sqlconnection):
         report = eachentry['reportid']
         attempt = eachentry['run_num']
 
-        if math.ceil(total_fights/100) == total_fights/100:
-            print(str(progress) + "/" + str(total_fights))
+        if math.ceil(progress/100) == progress/100:
+            print("\r" + str(progress) + "/" + str(total_fights), end='')
 
         partic_reports = fightparticipants[fightparticipants['reportid'] == report]
         participants = partic_reports[partic_reports['run_num'] == attempt]['charname']
@@ -38,18 +38,19 @@ def map_statics(sqlconnection):
         static = staticoccurences[0]
         if static[1] >= 5 and static[0] != 'N/A':
             fight_static.append([report, attempt, static[0]])
-    print('Statics Participating complete')
+        progress += 1
+    print('\rStatics Participating complete')
 
     total_updates = len(fight_static)
     progress = 1
     print('Updating database. Total to update: ' + str(total_updates))
     for eachentry in fight_static:
-        if math.ceil(total_updates/10) == total_updates/10:
-            print(str(progress) + "/" + str(total_updates))
+        if math.ceil(progress/10) == progress/10:
+            print("\r" + str(progress) + "/" + str(total_updates), end='')
         # set below line to assign to a variable for debugging outputs
         sqlf.update_MYSQL(sqlconnection, table, ['reportid', 'run_num'], eachentry[:2], ['static'], [eachentry[2]])
-
-    print('Update Complete')
+        progress += 1
+    print('\rUpdate Complete')
 
 
 if __name__ == '__main__':
