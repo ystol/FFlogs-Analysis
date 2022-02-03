@@ -6,6 +6,7 @@ import csv
 import mysql.connector
 import _1_Extract_Data as extract
 import _2_Map_Statics as mapstatic
+import _3_Get_static_performance as staticperformance
 
 pd.options.display.width = None
 
@@ -18,3 +19,4 @@ connection = mysql.connector.connect(host=config['Host'],
 
 extract.extract_data(connection)
 mapstatic.map_statics(connection)
+staticperformance.get_Static_Performance(connection)
