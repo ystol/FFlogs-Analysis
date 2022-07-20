@@ -13,12 +13,13 @@ from collections import Counter
 pd.options.display.width = None
 
 
-def map_statics(sqlconnection):
+def map_statics(sqlconnection, owner=''):
     table = 'fights'
     parttable = 'fight_participants'
-    fightsdf = sqlf.get_from_MYSQL_to_df(sqlconnection, table)
+    fullfightsdf = sqlf.get_from_MYSQL_to_df(sqlconnection, table)
     fightparticipants = sqlf.get_from_MYSQL_to_df(sqlconnection, parttable)
     characterlist = sqlf.get_from_MYSQL_to_df(sqlconnection, 'characters')
+    fightsdf = fullfightsdf[fullfightsdf['static'] == 'Not Scanned']
 
     fight_static = []
     total_fights = len(fightsdf)
@@ -36,8 +37,10 @@ def map_statics(sqlconnection):
         charactersfound = characterlist[characterlist['charname'].isin(participants)]['static_name']
         staticoccurences = Counter(charactersfound).most_common()
         static = staticoccurences[0]
-        if static[1] >= 5 and static[0] != 'N/A':
+        if static[1] >= 5 and static[0] != 'Not Assigned':
             fight_static.append([report, attempt, static[0]])
+        else:
+            fight_static.append([report, attempt, owner + ' Pug'])
         progress += 1
     print('\rStatics Participating complete')
 

@@ -47,54 +47,87 @@ def fflogs_getfightdata(report_list, prefix_url, suffix_url, owner):
             fights.append(fight_data)
         progress += 1
     print('\n')
+    print('Fight data gathering complete.')
     return pd.DataFrame.from_dict(fights)
 
 
 def fflogs_getcharacters(report_list, prefix_url, suffix_url, owner):
     players = []
+    report_length = len(report_list)
+    progress = 1
     for eachreport in report_list:
         fights_url = prefix_url + eachreport + suffix_url
-        print(fights_url)
+        print("\r" + "Gathering character data: " + str(progress) + "/" + str(report_length) + " from url: " + fights_url, end="")
         get_fights_call = requests.get(fights_url).json()
         allfights = get_fights_call['friendlies']
-        for eachfight in allfights:
-            fight_headers = ['name', 'server']
-            try:
-                values = [eachfight[header] for header in fight_headers]
-            except KeyError:
-                # ignoring for now, but an extra attempt is being found sometimes
-                continue
-            sql_headers = ['charname', 'server', 'firstreport', 'reportowner']
+        sql_headers = ['charname', 'server', 'static_name', 'firstreport', 'reportowner']
+        if len(allfights) > 0:
+            for eachfight in allfights:
+                fight_headers = ['name', 'server']
+                try:
+                    values = [eachfight[header] for header in fight_headers]
+                except KeyError:
+                    # ignoring for now, but an extra attempt is being found sometimes
+                    values = ['None', 'None']
+                values.insert(len(values), owner+' Pug')
+                values.insert(len(values), eachreport)
+                values.insert(len(values), owner)
+                player_info = dict(zip(sql_headers, values))
+                players.append(player_info)
+        else:
+            values = ['None', 'None', 'None']
             values.insert(len(values), eachreport)
             values.insert(len(values), owner)
             player_info = dict(zip(sql_headers, values))
             players.append(player_info)
+        progress += 1
     characters_df = pd.DataFrame.from_dict(players)
     # have to lower all names to remove capitalization issues of same character names
     lowerchars = characters_df.copy()
     lowerchars['charname'] = lowerchars['charname'].str.lower()
     lowerchars.drop_duplicates(subset=['charname'], inplace=True)
     indicies = lowerchars.index
-
+    print('\n')
+    print('Character data gathering complete.')
     return characters_df.loc[indicies]
 
 
-def fflogs_getparticipants(report_list, prefix_url, suffix_url):
+def fflogs_getparticipants(report_list, prefix_url, suffix_url, owner='Defai'):
     participants = []
+    report_length = len(report_list)
+    progress = 1
     for eachreport in report_list:
         fights_url = prefix_url + eachreport + suffix_url
-        print(fights_url)
+        print("\r" + "Gathering character data: " + str(progress) + "/" + str(report_length) + " from url: " + fights_url, end="")
         get_fights_call = requests.get(fights_url).json()
         allpeople = get_fights_call['friendlies']
         for eachperson in allpeople:
             try:
                 person_fights = eachperson['fights']
                 for eachfight in person_fights:
-                    sql_headers = ['reportid', 'run_num', 'charname', 'server_name']
-                    person = [eachreport, eachfight['id'], eachperson['name'], eachperson['server']]
+                    sql_headers = ['reportid', 'run_num', 'charname', 'server_name', 'reportowner']
+                    person = [eachreport, eachfight['id'], eachperson['name'], eachperson['server'], owner]
                     participant_data = dict(zip(sql_headers, person))
                     participants.append(participant_data)
             except KeyError:
                 continue
-
+        progress += 1
+    print('\n')
+    print('Participant data gathering complete.')
     return pd.DataFrame.from_dict(participants)
+
+
+def fflogs_getzones(zoneurl):
+    get_reports_call = requests.get(zoneurl).json()
+    zone_data = []
+    zone_columns = ['zone_id', 'zone_name', 'enc_boss_id', 'boss_name']
+    for allzones in get_reports_call:
+        zone_id = allzones['id']
+        zone_name = allzones['name']
+        for eachencounter in allzones['encounters']:
+            encounter_id = eachencounter['id']
+            encounter_name = eachencounter['name']
+            row_info = [zone_id, zone_name, encounter_id, encounter_name]
+            zone_dict = dict(zip(zone_columns, row_info))
+            zone_data.append(zone_dict)
+    return pd.DataFrame.from_dict(zone_data)

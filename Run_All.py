@@ -2,11 +2,14 @@ from Functions import Functions_Configs as configFunc
 from Functions import Functions_SQL_Interfacing as sqlf
 from Functions import Functions_FFlogsAPI as fflogs
 import pandas as pd
-import csv
+import time
 import mysql.connector
 import _1_Extract_Data as extract
+import _10_Static_Assigner_Csv as reassignstatics
 import _2_Map_Statics as mapstatic
-import _3_Get_static_performance as staticperformance
+import _3_Get_Zone_Data as zonedata
+import _4_Get_static_performance as staticperformance
+
 
 pd.options.display.width = None
 
@@ -17,6 +20,17 @@ connection = mysql.connector.connect(host=config['Host'],
                                      passwd=config['Password'],
                                      database=config['Database_Name'])
 
-extract.extract_data(connection)
-mapstatic.map_statics(connection)
+reportowner = 'Defai'
+extract.extract_data(connection, owner=reportowner)
+extract.extract_data(connection, owner=reportowner)
+time.sleep(1)
+reassignstatics.assignstatics()
+time.sleep(1)
+mapstatic.map_statics(connection, reportowner)
+time.sleep(1)
+zonedata.update_zone_data(connection)
+time.sleep(1)
+# allow this to run if its refreshing and updating based on input statics
 staticperformance.get_Static_Performance(connection)
+
+

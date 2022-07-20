@@ -2,20 +2,20 @@ from Functions import Functions_Configs as configFunc
 from Functions import Functions_SQL_Interfacing as sqlf
 from Functions import Functions_FFlogsAPI as fflogs
 import pandas as pd
+import math
 import csv
 import mysql.connector
 
 pd.options.display.width = None
 
 
-def extract_data(sqlconnection):
+def extract_data(sqlconnection, owner='Defai'):
     config_file = 'Key.csv'
     # open the csv, using the csv reader, and then convert into a list (for single column csv)
     with open(config_file) as config_data:
         reader = csv.reader(config_data)
         logskey = dict(reader)
 
-    owner = 'Defai'
     keysyntax = '?api_key=' + logskey['Key']
     endpoint = 'https://www.fflogs.com:443/v1/'
     myreports = 'reports/user/' + owner
@@ -50,7 +50,7 @@ def extract_data(sqlconnection):
     new_participants = report_list[~report_list.isin(participants_extracted)]
     num_participants_reports = len(new_participants)
     if num_participants_reports > 0:
-        participants_data = fflogs.fflogs_getparticipants(new_participants, endpoint + fightreports, keysyntax)
+        participants_data = fflogs.fflogs_getparticipants(new_participants, endpoint + fightreports, keysyntax, owner)
     else:
         print('No new reports found')
 
@@ -64,7 +64,8 @@ def extract_data(sqlconnection):
         char_dupe_data = sqlf.get_from_MYSQL_to_df(sqlconnection, target_table, table_col_name)[table_col_name]
         # this line checks the dataframe.column_name.isin(list of values to match against) and then keeps the false outputs
         # check if this is optimal and if you can do this inplace somehow?
-        characters = characters[~characters['charname'].isin(char_dupe_data.tolist())]
+        lower_char_dupe = [eachchar.lower() for eachchar in char_dupe_data.tolist()]
+        characters = characters[~(characters['charname'].str.lower()).isin(lower_char_dupe)]
         if len(characters) > 0:
             print('Characters not in database:')
             print(characters)
@@ -90,7 +91,7 @@ def extract_data(sqlconnection):
         # for local debugging and checking
         reportfight.to_excel(excel_saver, sheet_name='fightdata')
         fights_columns = list(reportfight.columns)
-        print(reportfight)
+        # print(reportfight)
         sqlf.save_to_SQL(sqlconnection, ftable, fights_columns, reportfight, delete_syntax)
 
     # check if there are any new characters against the database of characters
@@ -102,12 +103,25 @@ def extract_data(sqlconnection):
         ctable = 'characters'
         sqlf.save_to_SQL(sqlconnection, ctable, char_columns, characters, delete_syntax)
 
-    if num_participants_reports > 0:
+    if num_participants_reports > 0 and len(participants_data) > 0:
         print('Saving Participant Data')
         # for local debugging and checking
         participants_data.to_excel(excel_saver, sheet_name='participant_data')
         participants_columns = list(participants_data.columns)
-        sqlf.save_to_SQL(sqlconnection, fptable, participants_columns, participants_data, delete_syntax)
+        sizecap = 20000
+        if len(participants_data) > sizecap:
+            maxsize = len(participants_data)
+            runs = math.ceil(maxsize/sizecap)
+            start = 0
+            end = sizecap
+            for cycleend in range(runs):
+                if end >= maxsize:
+                    end = maxsize
+                sqlf.save_to_SQL(sqlconnection, fptable, participants_columns, participants_data[start:end])
+                start += sizecap
+                end += sizecap
+        else:
+            sqlf.save_to_SQL(sqlconnection, fptable, participants_columns, participants_data)
 
 
 if __name__ == '__main__':
@@ -117,4 +131,5 @@ if __name__ == '__main__':
                                          user=config['User'],
                                          passwd=config['Password'],
                                          database=config['Database_Name'])
-    extract_data(connection)
+    reportowner = 'Defai'
+    extract_data(connection, reportowner)
