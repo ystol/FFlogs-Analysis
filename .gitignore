@@ -1,5 +1,5 @@
 .idea/
-Key.csv
+/Key.csv
 /testdata.xlsx
 /Static Visualizations.pbix
 /testing.py
