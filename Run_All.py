@@ -4,12 +4,11 @@ from Functions import Functions_FFlogsAPI as fflogs
 import pandas as pd
 import time
 import mysql.connector
-import _1_Extract_Data as extract
+import _01_Extract_Data as extract
+import _02_Map_Statics as mapstatic
+import _03_Get_Zone_Data as zonedata
+import _04_Get_static_performance as staticperformance
 import _10_Static_Assigner_Csv as reassignstatics
-import _2_Map_Statics as mapstatic
-import _3_Get_Zone_Data as zonedata
-import _4_Get_static_performance as staticperformance
-
 
 pd.options.display.width = None
 

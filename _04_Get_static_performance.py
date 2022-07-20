@@ -7,8 +7,8 @@ import time
 import os
 import datetime
 import mysql.connector
-import _1_Extract_Data as extract
-import _2_Map_Statics as mapstatic
+import _01_Extract_Data as extract
+import _02_Map_Statics as mapstatic
 
 pd.options.display.width = None
 
